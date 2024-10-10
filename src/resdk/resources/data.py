@@ -364,7 +364,7 @@ class Data(BaseResolweResource):
             if file_name or field_name:
                 custom_file_names = [custom_file_name] * len(files)
             else:
-                logging.warning(
+                raise ValueError(
                     "Setting a custom file name is not supported "
                     "without specifying file name or field name."
                 )
