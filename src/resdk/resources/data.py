@@ -325,22 +325,16 @@ class Data(BaseResolweResource):
         return file_list
 
     def download(
-        self, file_name=None, field_name=None, download_dir=None, custom_file_name=None
+        self,
+        file_name: Optional[str] = None,
+        field_name: Optional[str] = None,
+        download_dir: Optional[str] = None,
+        custom_file_name: Optional[str] = None,
     ):
         """Download Data object's files and directories.
 
         Download files and directories from the Resolwe server to the
         download directory (defaults to the current working directory).
-
-        :param file_name: name of file or directory
-        :type file_name: string
-        :param field_name: file or directory field name
-        :type field_name: string
-        :param download_dir: download path
-        :type download_dir: string
-        :param custom_file_name: custom file name
-        :type custom_file_name: string
-        :rtype: None
 
         Data objects can contain multiple files and directories. All are
         downloaded by default, but may be filtered by name or output
@@ -348,6 +342,9 @@ class Data(BaseResolweResource):
 
         * re.data.get(42).download(file_name='alignment7.bam')
         * re.data.get(42).download(field_name='bam')
+
+        If custom_file_name is provided, the file will be saved with that name,
+        provided that either field_name or file_name is also specified.
 
         """
         if file_name and field_name:

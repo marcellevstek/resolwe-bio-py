@@ -466,7 +466,7 @@ class Resolwe:
         files: List[Union[str, Path]],
         download_dir=None,
         show_progress=True,
-        custom_file_names: Union[List[str], None] = None,
+        custom_file_names: Optional[List[str]] = None,
     ):
         """Download files.
 
@@ -474,12 +474,8 @@ class Resolwe:
         directory (defaults to the current working directory).
 
         :param files: files to download
-        :type files: list of file URI
         :param download_dir: download directory
-        :type download_dir: string
         :param custom_file_names: list of file names to save the downloaded files as
-        :type custom_file_names: list of strings or None
-        :rtype: None
 
         """
         if not download_dir:
@@ -565,7 +561,7 @@ class Resolwe:
                 )
                 if expected_md5 != computed_md5:
                     raise ValueError(
-                        f"Checksum of downloaded file {actual_file_name} does not match the expected value."
+                        f"Checksum ({computed_md5}) of downloaded file {actual_file_name} does not match the expected value of {expected_md5}."
                     )
 
     def data_usage(self, **query_params):
