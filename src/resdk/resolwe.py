@@ -466,7 +466,6 @@ class Resolwe:
         files: List[Union[str, Path]],
         download_dir=None,
         show_progress=True,
-        custom_file_names: Optional[List[str]] = None,
     ):
         """Download files.
 
@@ -475,7 +474,6 @@ class Resolwe:
 
         :param files: files to download
         :param download_dir: download directory
-        :param custom_file_names: list of file names to save the downloaded files as
 
         """
         if not download_dir:
@@ -486,14 +484,6 @@ class Resolwe:
                 "Download directory does not exist: {}".format(download_dir)
             )
 
-        if not custom_file_names:
-            custom_file_names = len(files) * [None]
-        else:
-            if not len(files) == len(custom_file_names):
-                raise ValueError(
-                    "Number of files and their corresponding custom file names must be equal."
-                )
-
         if not files:
             self.logger.info("No files to download.")
         else:
@@ -503,7 +493,7 @@ class Resolwe:
             sizes: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
             checksums: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
 
-            for file_uri, custom_file_name in zip(files, custom_file_names):
+            for file_uri in files:
                 file_name = os.path.basename(file_uri)
                 file_path = os.path.dirname(file_uri)
                 file_url = urljoin(self.url, "data/{}".format(file_uri))
@@ -527,19 +517,12 @@ class Resolwe:
 
                 file_size = sizes[file_directory][file_name]
 
-                if custom_file_name:
-                    desc = f"Downloading file {file_name} as {custom_file_name}"
-                    actual_file_name = custom_file_name
-                else:
-                    desc = f"Downloading file {file_name}"
-                    actual_file_name = file_name
-
                 with tqdm.tqdm(
                     total=file_size,
                     disable=not show_progress,
-                    desc=desc,
+                    desc=f"Downloading file {file_name}",
                 ) as progress_bar, open(
-                    os.path.join(download_dir, file_path, actual_file_name), "wb"
+                    os.path.join(download_dir, file_path, file_name), "wb"
                 ) as file_handle:
                     response = self.session.get(file_url, stream=True, auth=self.auth)
 
@@ -556,12 +539,10 @@ class Resolwe:
                     # checksums that are difficult to reproduce here.
                     return
                 expected_md5 = checksums[file_directory][file_name]
-                computed_md5 = md5(
-                    os.path.join(download_dir, file_path, actual_file_name)
-                )
+                computed_md5 = md5(os.path.join(download_dir, file_path, file_name))
                 if expected_md5 != computed_md5:
                     raise ValueError(
-                        f"Checksum ({computed_md5}) of downloaded file {actual_file_name} does not match the expected value of {expected_md5}."
+                        f"Checksum ({computed_md5}) of downloaded file {file_name} does not match the expected value of {expected_md5}."
                     )
 
     def data_usage(self, **query_params):

@@ -2,6 +2,7 @@
 
 import json
 import logging
+import os
 from typing import Optional
 from urllib.parse import urljoin
 
@@ -15,6 +16,12 @@ from .descriptor import DescriptorSchema
 from .process import Process
 from .sample import Sample
 from .utils import flatten_field, parse_resolwe_datetime
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    datefmt="%d-%b-%y %H:%M:%S",
+)
 
 
 class Data(BaseResolweResource):
@@ -329,7 +336,6 @@ class Data(BaseResolweResource):
         file_name: Optional[str] = None,
         field_name: Optional[str] = None,
         download_dir: Optional[str] = None,
-        custom_file_name: Optional[str] = None,
     ):
         """Download Data object's files and directories.
 
@@ -343,9 +349,6 @@ class Data(BaseResolweResource):
         * re.data.get(42).download(file_name='alignment7.bam')
         * re.data.get(42).download(field_name='bam')
 
-        If custom_file_name is provided, the file will be saved with that name,
-        provided that either field_name or file_name is also specified.
-
         """
         if file_name and field_name:
             raise ValueError("Only one of file_name or field_name may be given.")
@@ -354,20 +357,48 @@ class Data(BaseResolweResource):
             "{}/{}".format(self.id, fname)
             for fname in self.files(file_name, field_name)
         ]
+        file_names = [fname for fname in self.files(file_name, field_name)]
 
-        # Only applies if downloading a single file
-        custom_file_names = None
-        if custom_file_name:
-            if file_name or field_name:
-                custom_file_names = [custom_file_name] * len(files)
-            else:
-                raise ValueError(
-                    "Setting a custom file name is not supported "
-                    "without specifying file name or field name."
-                )
+        self.resolwe._download_files(files=files, download_dir=download_dir)
 
-        self.resolwe._download_files(
-            files=files, download_dir=download_dir, custom_file_names=custom_file_names
+        return file_names
+
+    def download_and_rename(
+        self,
+        custom_file_name: str,
+        field_name: Optional[str] = None,
+        file_name: Optional[str] = None,
+        download_dir: Optional[str] = None,
+    ):
+        """Download and rename a single file from data object."""
+
+        if download_dir is None:
+            download_dir = os.getcwd()
+
+        new_file_path = os.path.join(download_dir, custom_file_name)
+
+        if os.path.exists(new_file_path):
+            logging.warning(
+                f"File with path '{new_file_path}' already exists. Skipping download."
+            )
+            return
+
+        file_names = self.download(
+            file_name=file_name,
+            field_name=field_name,
+            download_dir=download_dir,
+        )
+        if len(file_names) != 1:
+            raise ValueError(
+                f"Expected one file to be downloaded, but got {len(file_names)}"
+            )
+        og_file_name = file_names[0]
+        og_file_path = os.path.join(download_dir, og_file_name)
+
+        logging.info(f"Renaming file '{og_file_name}' to '{custom_file_name}'.")
+        os.rename(
+            og_file_path,
+            new_file_path,
         )
 
     def stdout(self):
