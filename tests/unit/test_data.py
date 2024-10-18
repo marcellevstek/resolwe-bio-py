@@ -180,7 +180,6 @@ class TestData(unittest.TestCase):
         data_mock.resolwe._download_files.assert_called_once_with(
             files=["123/file1.txt", "123/file2.fq.gz"],
             download_dir=None,
-            custom_file_names=None,
         )
 
         data_mock.reset_mock()
@@ -188,7 +187,6 @@ class TestData(unittest.TestCase):
         data_mock.resolwe._download_files.assert_called_once_with(
             files=["123/file1.txt", "123/file2.fq.gz"],
             download_dir="/some/path/",
-            custom_file_names=None,
         )
 
         data_mock.reset_mock()

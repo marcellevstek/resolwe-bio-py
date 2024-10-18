@@ -370,7 +370,7 @@ class Data(BaseResolweResource):
         file_name: Optional[str] = None,
         download_dir: Optional[str] = None,
     ):
-        """Download and rename a single file from data object."""
+        """Download and rename a single file from the Data object."""
 
         if download_dir is None:
             download_dir = os.getcwd()
