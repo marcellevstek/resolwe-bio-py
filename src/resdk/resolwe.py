@@ -200,6 +200,18 @@ class Resolwe:
                 "Warning: unable to read the minimal supported version from the server."
             )
 
+    def version_output(self):
+        """Output the version of the server modules."""
+        url = urljoin(self.url, "/about/versions")
+        try:
+            response = requests.get(url)
+            server_version = response.json()
+            return server_version
+        except Exception:
+            self.logger.warning(
+                "Warning: unable to read the server version from the server."
+            )
+
     def _validate_url(self, url):
         if not re.match(r"https?://", url):
             raise ValueError("Server url must start with http(s)://")
