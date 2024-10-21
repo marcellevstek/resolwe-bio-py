@@ -17,12 +17,6 @@ from .process import Process
 from .sample import Sample
 from .utils import flatten_field, parse_resolwe_datetime
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    datefmt="%d-%b-%y %H:%M:%S",
-)
-
 
 class Data(BaseResolweResource):
     """Resolwe Data resource.
@@ -366,39 +360,36 @@ class Data(BaseResolweResource):
     def download_and_rename(
         self,
         custom_file_name: str,
+        overwrite_existing: bool = False,
         field_name: Optional[str] = None,
         file_name: Optional[str] = None,
         download_dir: Optional[str] = None,
     ):
         """Download and rename a single file from the Data object."""
 
+        if not field_name and not file_name:
+            raise ValueError("Either 'file_name' or 'field_name' must be given.")
+
         if download_dir is None:
             download_dir = os.getcwd()
-
-        new_file_path = os.path.join(download_dir, custom_file_name)
-
-        if os.path.exists(new_file_path):
-            logging.warning(
-                f"File with path '{new_file_path}' already exists. Skipping download."
+        destination_file_path = os.path.join(download_dir, custom_file_name)
+        if os.path.exists(destination_file_path) and not overwrite_existing:
+            raise FileExistsError(
+                f"File with path '{destination_file_path}' already exists. Skipping download."
             )
-            return
 
-        file_names = self.download(
+        source_file_name = self.download(
             file_name=file_name,
             field_name=field_name,
             download_dir=download_dir,
-        )
-        if len(file_names) != 1:
-            raise ValueError(
-                f"Expected one file to be downloaded, but got {len(file_names)}"
-            )
-        og_file_name = file_names[0]
-        og_file_path = os.path.join(download_dir, og_file_name)
+        )[0]
 
-        logging.info(f"Renaming file '{og_file_name}' to '{custom_file_name}'.")
+        source_file_path = os.path.join(download_dir, source_file_name)
+
+        logging.info(f"Renaming file '{source_file_name}' to '{custom_file_name}'.")
         os.rename(
-            og_file_path,
-            new_file_path,
+            source_file_path,
+            destination_file_path,
         )
 
     def stdout(self):
