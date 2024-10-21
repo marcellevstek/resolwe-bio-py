@@ -4,6 +4,14 @@ Change Log
 
 All notable changes to this project are documented in this file.
 
+==========
+Unreleased
+==========
+
+Added
+-----
+- Add a resolwe method for fetching the server module versions
+
 
 ===================
 21.2.1 - 2024-10-08
